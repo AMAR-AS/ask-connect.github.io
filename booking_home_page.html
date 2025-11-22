@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASK Connect - Login & Signup</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0e27;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.3) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 20%, rgba(168, 85, 247, 0.2) 0%, transparent 50%);
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(-10%, -10%) rotate(5deg); }
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: float 20s infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { 
+                transform: translateY(0) translateX(0);
+                opacity: 0;
+            }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.6; }
+            100% { 
+                transform: translateY(-100vh) translateX(50px);
+                opacity: 0;
+            }
+        }
+
+        .auth-container {
+            display: flex;
+            max-width: 1000px;
+            width: 100%;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(30px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+            z-index: 10;
+            min-height: 600px;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 40px 30px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .logo-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .nav-button {
+            width: 100%;
+            padding: 18px 24px;
+            margin-bottom: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            overflow: hidden;
+            text-align: left;
+        }
+
+        .nav-button.active {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+            border-color: rgba(102, 126, 234, 0.5);
+            color: #fff;
+            transform: translateX(8px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 50px 60px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .form-container {
+            position: absolute;
+            top: 50px;
+            left: 60px;
+            right: 60px;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none;
+        }
+
+        .form-container.active {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: all;
+        }
+
+        .glass-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-input:focus {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: #818cf8;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.1);
+        }
+
+        .glass-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .submit-btn {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+        }
+
+        .login-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+        }
+
+        .signup-btn {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .auth-container {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            .content-area {
+                padding: 30px 20px;
+            }
+            .form-container {
+                top: 30px;
+                left: 20px;
+                right: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="particle" style="left: 10%; animation-delay: 0s;"></div>
+    <div class="particle" style="left: 30%; animation-delay: 3s;"></div>
+    <div class="particle" style="left: 50%; animation-delay: 6s;"></div>
+    <div class="particle" style="left: 70%; animation-delay: 9s;"></div>
+    <div class="particle" style="left: 90%; animation-delay: 12s;"></div>
+
+    <div class="auth-container">
+        <div class="sidebar">
+            <div class="logo-section">
+                <div class="logo-icon">
+                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                    </svg>
+                </div>
+                <h1 class="text-white text-xl font-bold">ASK Connect</h1>
+            </div>
+
+            <nav>
+                <button class="nav-button active" onclick="switchView('login')">
+                    🔐 Sign In
+                </button>
+                <button class="nav-button" onclick="switchView('signup')">
+                    ✨ Create Account
+                </button>
+            </nav>
+
+            <div class="mt-auto pt-8">
+                <p class="text-white/30 text-xs text-center">
+                    © 2025 Amarjith Singh Kalidasan<br> All Rights Reserved 
+                </p>
+            </div>
+        </div>
+
+        <div class="content-area">
+            
+            <!-- LOGIN FORM -->
+            <div id="login-form" class="form-container active">
+                <h2 class="text-3xl font-bold text-white mb-3">Welcome Back</h2>
+                <p class="text-white/50 mb-8">Sign in to continue to your account</p>
+
+                <form id="login-form-element" class="space-y-6">
+                    <div>
+                        <label for="login-identifier" class="text-white/70 text-sm font-semibold block mb-2">Email Address</label>
+                        <input type="email" id="login-identifier" required 
+                               placeholder="Enter your email" 
+                               class="glass-input w-full px-4 py-4 rounded-xl text-base">
+                    </div>
+
+                    <div>
+                        <label for="login-password" class="text-white/70 text-sm font-semibold block mb-2">Password</label>
+                        <input type="password" id="login-password" required 
+                               placeholder="••••••••" 
+                               class="glass-input w-full px-4 py-4 rounded-xl text-base">
+                    </div>
+
+                    <button type="submit" 
+                            class="submit-btn login-btn w-full py-4 text-white text-base font-bold rounded-xl">
+                        Sign In Securely
+                    </button>
+
+                    <p class="text-center text-white/50 text-sm mt-6">
+                        Forgot password? 
+                        <a href="#" onclick="handleForgotPassword(); return false;" class="text-purple-400 hover:text-purple-300 ml-1">Recover Account</a>
+                    </p>
+                </form>
+            </div>
+
+            <!-- SIGNUP FORM -->
+            <div id="signup-form" class="form-container">
+                <h2 class="text-3xl font-bold text-white mb-3">Create Account</h2>
+                <p class="text-white/50 mb-8">Join us today and get started</p>
+
+                <form id="signup-form-element" class="space-y-5">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="signup-name" class="text-white/70 text-sm font-semibold block mb-2">Full Name</label>
+                            <input type="text" id="signup-name" required 
+                                   placeholder="John Doe" 
+                                   class="glass-input w-full px-4 py-3.5 rounded-xl text-sm">
+                        </div>
+                        <div>
+                            <label for="signup-username" class="text-white/70 text-sm font-semibold block mb-2">Username</label>
+                            <input type="text" id="signup-username" required 
+                                   placeholder="johndoe88" 
+                                   class="glass-input w-full px-4 py-3.5 rounded-xl text-sm">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="signup-email" class="text-white/70 text-sm font-semibold block mb-2">Email Address</label>
+                            <input type="email" id="signup-email" required 
+                                   placeholder="you@example.com" 
+                                   class="glass-input w-full px-4 py-3.5 rounded-xl text-sm">
+                        </div>
+                        <div>
+                            <label for="signup-phone" class="text-white/70 text-sm font-semibold block mb-2">Phone Number</label>
+                            <input type="tel" id="signup-phone" required 
+                                   placeholder="9876543210" 
+                                   class="glass-input w-full px-4 py-3.5 rounded-xl text-sm">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="signup-dob" class="text-white/70 text-sm font-semibold block mb-2">Date of Birth</label>
+                        <input type="date" id="signup-dob" required 
+                               class="glass-input w-full px-4 py-3.5 rounded-xl text-sm">
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="signup-password" class="text-white/70 text-sm font-semibold block mb-2">Password</label>
+                            <input type="password" id="signup-password" required 
+                                   placeholder="Min 8 characters" 
+                                   class="glass-input w-full px-4 py-3.5 rounded-xl text-sm">
+                        </div>
+                        <div>
+                            <label for="signup-confirm-password" class="text-white/70 text-sm font-semibold block mb-2">Confirm Password</label>
+                            <input type="password" id="signup-confirm-password" required 
+                                   placeholder="Confirm Password" 
+                                   class="glass-input w-full px-4 py-3.5 rounded-xl text-sm">
+                        </div>
+                    </div>
+
+                    <button type="submit" 
+                            class="submit-btn signup-btn w-full py-4 text-white text-base font-bold rounded-xl mt-2">
+                        Create Account
+                    </button>
+
+                    <p class="text-center text-white/50 text-sm mt-6">
+                        Already have an account? 
+                        <a href="#" onclick="switchView('login'); return false;" class="text-purple-400 hover:text-purple-300 ml-1">Sign In</a>
+                    </p>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Supabase Client Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Include your config and auth files -->
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+
+    <script>
+        // Switch between Login and Signup views
+        function switchView(view) {
+            const loginForm = document.getElementById('login-form');
+            const signupForm = document.getElementById('signup-form');
+            const navButtons = document.querySelectorAll('.nav-button');
+            
+            navButtons.forEach(btn => btn.classList.remove('active'));
+            
+            if (view === 'login') {
+                navButtons[0].classList.add('active');
+                signupForm.classList.remove('active');
+                setTimeout(() => {
+                    loginForm.classList.add('active');
+                }, 100);
+            } else {
+                navButtons[1].classList.add('active');
+                loginForm.classList.remove('active');
+                setTimeout(() => {
+                    signupForm.classList.add('active');
+                }, 100);
+            }
+        }
+
+        // Handle Login Form Submission
+        document.getElementById('login-form-element').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const identifier = document.getElementById('login-identifier').value;
+            const password = document.getElementById('login-password').value;
+            
+            const result = await handleLogin(identifier, password);
+            
+            if (result.success) {
+                showToast(result.message, 'success');
+                setTimeout(() => {
+                    window.location.href = result.redirect;
+                }, 1000);
+            } else {
+                showToast(result.message, 'error');
+            }
+        });
+
+        // Handle Signup Form Submission
+        document.getElementById('signup-form-element').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('signup-name').value,
+                username: document.getElementById('signup-username').value,
+                email: document.getElementById('signup-email').value,
+                phone: document.getElementById('signup-phone').value,
+                dob: document.getElementById('signup-dob').value,
+                password: document.getElementById('signup-password').value,
+                confirm_password: document.getElementById('signup-confirm-password').value
+            };
+            
+            const result = await handleSignup(formData);
+            
+            if (result.success) {
+                showToast(result.message, 'success');
+                // Clear form
+                document.getElementById('signup-form-element').reset();
+                // Switch to login
+                setTimeout(() => {
+                    switchView('login');
+                }, 2000);
+            } else {
+                showToast(result.message, 'error');
+            }
+        });
+
+        // Handle Forgot Password
+        async function handleForgotPassword() {
+            const email = prompt('Enter your email address:');
+            if (!email) return;
+            
+            const result = await sendPasswordReset(email);
+            if (result.success) {
+                showToast(result.message, 'success');
+            } else {
+                showToast(result.message, 'error');
+            }
+        }
+
+        // Redirect if already logged in
+        redirectIfAuthenticated();
+    </script>
+</body>
+</html>
