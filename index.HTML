@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASK Connect - Next Gen Unified Connectivity</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0e27;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        /* Animated gradient background */
+        body::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.3) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 20%, rgba(168, 85, 247, 0.2) 0%, transparent 50%);
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(-10%, -10%) rotate(5deg); }
+        }
+
+        /* Floating particles */
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: float 20s infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { 
+                transform: translateY(0) translateX(0);
+                opacity: 0;
+            }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.6; }
+            100% { 
+                transform: translateY(-100vh) translateX(50px);
+                opacity: 0;
+            }
+        }
+
+        /* Main container with sidebar layout */
+        .auth-container {
+            display: flex;
+            max-width: 1000px;
+            width: 100%;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(30px) saturate(180%);
+            -webkit-backdrop-filter: blur(30px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+            z-index: 10;
+            min-height: 600px;
+        }
+
+        /* Left Sidebar - Navigation */
+        .sidebar {
+            width: 280px;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 40px 30px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .logo-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 70px;
+            height: 70px;
+            rounded: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .nav-button {
+            width: 100%;
+            padding: 18px 24px;
+            margin-bottom: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            overflow: hidden;
+            text-align: left;
+        }
+
+        .nav-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .nav-button:hover::before {
+            left: 100%;
+        }
+
+        .nav-button.active {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+            border-color: rgba(102, 126, 234, 0.5);
+            color: #fff;
+            transform: translateX(8px);
+            box-shadow: 
+                0 8px 20px rgba(102, 126, 234, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .nav-button:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.06);
+            color: rgba(255, 255, 255, 0.8);
+            transform: translateX(4px);
+        }
+
+        /* Right Content Area */
+        .content-area {
+            flex: 1;
+            padding: 50px 60px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Form container with Mac-style scale animation */
+        .form-container {
+            position: absolute;
+            top: 50px;
+            left: 60px;
+            right: 60px;
+            opacity: 0;
+            transform: scale(0.8);
+            transform-origin: center;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none;
+        }
+
+        .form-container.active {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: all;
+        }
+
+        /* Glassy input styling */
+        .glass-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .glass-input:focus {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: #818cf8;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .glass-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .glass-input[type="date"] {
+            color: #fff;
+        }
+
+        .glass-input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1) brightness(0.8);
+            cursor: pointer;
+        }
+
+        /* Mode selector with Mac-style animation */
+        .mode-selector {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 5px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            position: relative;
+        }
+
+        .mode-indicator {
+            position: absolute;
+            height: calc(100% - 10px);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            top: 5px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .mode-button {
+            flex: 1;
+            padding: 12px 20px;
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            z-index: 1;
+            border-radius: 10px;
+        }
+
+        .mode-button.active {
+            color: #fff;
+        }
+
+        /* Submit buttons */
+        .submit-btn {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .submit-btn:hover::before {
+            width: 400px;
+            height: 400px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+        }
+
+        .submit-btn:active {
+            transform: scale(0.98);
+        }
+
+        .login-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+        }
+
+        .login-btn:hover {
+            box-shadow: 0 15px 40px rgba(16, 185, 129, 0.5);
+        }
+
+        .signup-btn {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+        }
+
+        .signup-btn:hover {
+            box-shadow: 0 15px 40px rgba(99, 102, 241, 0.5);
+        }
+
+        /* Labels */
+        .input-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* Link styling */
+        .link-text {
+            background: linear-gradient(90deg, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .link-text:hover {
+            filter: brightness(1.2);
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .auth-container {
+                flex-direction: column;
+                min-height: auto;
+            }
+
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                padding: 30px 20px;
+            }
+
+            .logo-section {
+                margin-bottom: 30px;
+            }
+
+            .content-area {
+                padding: 30px 20px;
+            }
+
+            .form-container {
+                top: 30px;
+                left: 20px;
+                right: 20px;
+            }
+
+            .nav-button.active {
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <script>
+// Handle Login Form
+document.querySelector('#login-form form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = {
+        action: 'login',
+        identifier: document.getElementById('login-identifier').value,
+        password: document.getElementById('login-password').value
+    };
+    
+    try {
+        const response = await fetch('api_handler.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert(result.message);
+            window.location.href = 'home.html';
+        } else {
+            alert(result.message);
+        }
+    } catch (error) {
+        alert('Login failed: ' + error.message);
+    }
+});
+
+// Handle Signup Form
+document.querySelector('#signup-form form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = {
+        action: 'signup',
+        name: document.getElementById('signup-name').value,
+        username: document.getElementById('signup-username').value,
+        email: document.getElementById('signup-email').value,
+        phone: document.getElementById('signup-phone').value,
+        dob: document.getElementById('signup-dob').value,
+        password: document.getElementById('signup-password').value,
+        confirm_password: document.getElementById('signup-confirm-password').value
+    };
+    
+    try {
+        const response = await fetch('api_handler.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert(result.message);
+            document.querySelector('#signup-form form').reset();
+            switchView('login');
+        } else {
+            alert(result.message);
+        }
+    } catch (error) {
+        alert('Signup failed: ' + error.message);
+    }
+});
+
+// Other existing functions...
+</script>
+    <!-- Floating particles -->
+    <div class="particle" style="left: 10%; animation-delay: 0s;"></div>
+    <div class="particle" style="left: 30%; animation-delay: 3s;"></div>
+    <div class="particle" style="left: 50%; animation-delay: 6s;"></div>
+    <div class="particle" style="left: 70%; animation-delay: 9s;"></div>
+    <div class="particle" style="left: 90%; animation-delay: 12s;"></div>
+
+    <!-- Main Container -->
+    <div class="auth-container">
+        
+        <!-- Left Sidebar Navigation -->
+        <div class="sidebar">
+            <div class="logo-section">
+                <div class="logo-icon">
+                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                    </svg>
+                </div>
+                <h1 class="text-white text-xl font-bold">ASK Connect</h1>
+            </div>
+
+            <nav>
+                <button class="nav-button active" onclick="switchView('login')">
+                    <span>🔐 Sign In</span>
+                </button>
+                <button class="nav-button" onclick="switchView('signup')">
+                    <span>✨ Create Account</span>
+                </button>
+            </nav>
+
+            <div class="mt-auto pt-8">
+                <p class="text-white/30 text-xs text-center">
+                    © 2025 Amarjith Singh K.All rights Reserved.
+                </p>
+            </div>
+        </div>
+
+        <!-- Right Content Area -->
+        <div class="content-area">
+            
+            <!-- LOGIN FORM -->
+            <div id="login-form" class="form-container active">
+                <h2 class="text-3xl font-bold text-white mb-3">Welcome Back</h2>
+                <p class="text-white/50 mb-8">Sign in to continue to your account</p>
+
+                <form method="POST" action="config.php" class="space-y-6">
+                    <input type="hidden" name="action" value="login">
+
+                    <!-- Mode Selection -->
+                    <div>
+                        <label class="input-label block mb-3">Login Method</label>
+                        <div class="mode-selector">
+                            <div id="login-indicator" class="mode-indicator"></div>
+                            <button type="button" data-mode="username" class="mode-button active" onclick="selectLoginMode(this, 0)">
+                                Username
+                            </button>
+                            <button type="button" data-mode="email" class="mode-button" onclick="selectLoginMode(this, 1)">
+                                Email
+                            </button>
+                            <button type="button" data-mode="phone" class="mode-button" onclick="selectLoginMode(this, 2)">
+                                Phone
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Identifier Input -->
+                    <div>
+                        <label for="login-identifier" class="input-label block mb-2">Identifier</label>
+                        <input type="text" id="login-identifier" name="identifier" required 
+                               placeholder="Enter your username" 
+                               class="glass-input w-full px-4 py-4 rounded-xl text-base">
+                    </div>
+
+                    <!-- Password -->
+                    <div>
+                        <label for="login-password" class="input-label block mb-2">Password</label>
+                        <input type="password" id="login-password" name="password" required 
+                               placeholder="••••••••" 
+                               class="glass-input w-full px-4 py-4 rounded-xl text-base">
+                    </div>
+
+                    <button type="submit" 
+                            class="submit-btn login-btn w-full py-4 text-white text-base font-bold rounded-xl relative z-10">
+                        Sign In Securely
+                    </button>
+
+                    <p class="text-center text-white/50 text-sm mt-6">
+                        Forgot password? 
+                        <a href="#" class="link-text ml-1">Recover Account</a>
+                    </p>
+                </form>
+            </div>
+
+            <!-- SIGNUP FORM -->
+            <div id="signup-form" class="form-container">
+                <h2 class="text-3xl font-bold text-white mb-3">Create Account</h2>
+                <p class="text-white/50 mb-8">Join us today and get started</p>
+
+                <form method="POST" action="config.php" class="space-y-5">
+                    <input type="hidden" name="action" value="signup">
+
+                    <!-- Name and Username -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="signup-name" class="input-label block mb-2">Full Name</label>
+                            <input type="text" id="signup-name" name="name" required 
+                                   placeholder="John Doe" 
+                                   class="glass-input w-full px-4 py-3.5 rounded-xl text-sm">
+                        </div>
+                        <div>
+                            <label for="signup-username" class="input-label block mb-2">Username</label>
+                            <input type="text" id="signup-username" name="username" required 
+                                   placeholder="johndoe88" 
+                                   class="glass-input w-full px-4 py-3.5 rounded-xl text-sm">
+                        </div>
+                    </div>
+
+                    <!-- Email and Phone -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="signup-email" class="input-label block mb-2">Email Address</label>
+                            <input type="email" id="signup-email" name="email" required 
+                                   placeholder="you@example.com" 
+                                   class="glass-input w-full px-4 py-3.5 rounded-xl text-sm">
+                        </div>
+                        <div>
+                            <label for="signup-phone" class="input-label block mb-2">Phone Number</label>
+                            <input type="tel" id="signup-phone" name="phone" required 
+                                   placeholder="(123) 456-7890" 
+                                   class="glass-input w-full px-4 py-3.5 rounded-xl text-sm">
+                        </div>
+                    </div>
+                    
+                    <!-- Date of Birth -->
+                    <div>
+                        <label for="signup-dob" class="input-label block mb-2">Date of Birth</label>
+                        <input type="date" id="signup-dob" name="dob" required 
+                               class="glass-input w-full px-4 py-3.5 rounded-xl text-sm">
+                    </div>
+
+                    <!-- Passwords -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="signup-password" class="input-label block mb-2">Password</label>
+                            <input type="password" id="signup-password" name="password" required 
+                                   placeholder="Create Password" 
+                                   class="glass-input w-full px-4 py-3.5 rounded-xl text-sm">
+                        </div>
+                        <div>
+                            <label for="signup-confirm-password" class="input-label block mb-2">Confirm Password</label>
+                            <input type="password" id="signup-confirm-password" name="confirm_password" required 
+                                   placeholder="Confirm Password" 
+                                   class="glass-input w-full px-4 py-3.5 rounded-xl text-sm">
+                        </div>
+                    </div>
+
+                    <button type="submit" 
+                            class="submit-btn signup-btn w-full py-4 text-white text-base font-bold rounded-xl relative z-10 mt-2">
+                        Create Account
+                    </button>
+
+                    <p class="text-center text-white/50 text-sm mt-6">
+                        Already have an account? 
+                        <a href="#" onclick="switchView('login'); return false;" class="link-text ml-1">Sign In</a>
+                    </p>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const loginForm = document.getElementById('login-form');
+        const signupForm = document.getElementById('signup-form');
+        const navButtons = document.querySelectorAll('.nav-button');
+        const loginIdentifier = document.getElementById('login-identifier');
+        const loginModeButtons = document.querySelectorAll('#login-form .mode-button');
+        const loginIndicator = document.getElementById('login-indicator');
+
+        // Switch between Login and Signup views with Mac-style animation
+        function switchView(view) {
+            // Update navigation buttons
+            navButtons.forEach(btn => btn.classList.remove('active'));
+            
+            if (view === 'login') {
+                navButtons[0].classList.add('active');
+                signupForm.classList.remove('active');
+                setTimeout(() => {
+                    loginForm.classList.add('active');
+                }, 100);
+            } else {
+                navButtons[1].classList.add('active');
+                loginForm.classList.remove('active');
+                setTimeout(() => {
+                    signupForm.classList.add('active');
+                }, 100);
+            }
+        }
+
+        // Select login mode with animated indicator
+        function selectLoginMode(button, index) {
+            const mode = button.dataset.mode;
+            
+            // Update active button
+            loginModeButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+
+            // Animate indicator
+            const buttonWidth = button.offsetWidth;
+            const buttonLeft = button.offsetLeft;
+            loginIndicator.style.width = buttonWidth + 'px';
+            loginIndicator.style.left = buttonLeft + 'px';
+
+            // Update input field
+            let placeholderText = '';
+            let inputType = 'text';
+
+            switch (mode) {
+                case 'username':
+                    placeholderText = 'Enter your username';
+                    inputType = 'text';
+                    break;
+                case 'email':
+                    placeholderText = 'Enter your email address';
+                    inputType = 'email';
+                    break;
+                case 'phone':
+                    placeholderText = 'Enter your phone number';
+                    inputType = 'tel';
+                    break;
+            }
+
+            loginIdentifier.placeholder = placeholderText;
+            loginIdentifier.name = mode;
+            loginIdentifier.type = inputType;
+        }
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            selectLoginMode(loginModeButtons[0], 0);
+        });
+    </script>
+</body>
+</html>
