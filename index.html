@@ -1,6 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+  // 2. Initialize the client
+  const supabaseUrl = 'https://chooghocqzzcyqmoriiq.supabase.co'
+  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNob29naG9jcXp6Y3lxbW9yaWlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM4MDU0NTIsImV4cCI6MjA3OTM4MTQ1Mn0.rWJrulWUwu8FchSJHJuRlDjb-ftV31R09J9uZdJCrQM'
+  const _supabase = supabase.createClient(supabaseUrl, supabaseKey)
+
+  // 3. Example: Fetch data from a table called 'users'
+  async function getUsers() {
+    const { data, error } = await _supabase
+      .from('users')
+      .select('*')
+    
+    if (error) console.error('Error:', error)
+    else console.log('Data:', data)
+  }
+
+  getUsers();
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ASK Connect - Your All-in-One Platform</title>
