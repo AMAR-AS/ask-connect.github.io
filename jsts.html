@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JS vs TS: The 54-Expert Battle</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        :root { --js: #f7df1e; --ts: #3178c6; --bg: #0f172a; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, sans-serif; 
+            background: var(--bg); color: white; margin: 0; 
+            display: flex; justify-content: center; align-items: center; 
+            min-height: 100vh; text-align: center; 
+        }
+        .container { 
+            background: #1e293b; padding: 2.5rem; border-radius: 25px; 
+            width: 90%; max-width: 420px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); 
+        }
+        .hidden { display: none; }
+        #qrcode { background: white; padding: 15px; display: inline-block; border-radius: 15px; margin: 20px 0; }
+        
+        /* Assignment Card */
+        .card { border-top: 12px solid; padding: 30px; border-radius: 15px; background: rgba(255,255,255,0.05); }
+        .js-team { border-color: var(--js); color: var(--js); }
+        .ts-team { border-color: var(--ts); color: var(--ts); }
+        
+        .topic-id { font-size: 0.8rem; letter-spacing: 2px; opacity: 0.6; margin-bottom: 10px; color: white; }
+        .topic-name { font-size: 1.6rem; font-weight: 800; margin: 15px 0; color: white; }
+        .instruction { font-size: 1.1rem; padding: 12px; background: rgba(255,255,255,0.1); border-radius: 8px; margin-top: 20px; color: #38bdf8; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="host-view">
+        <h1 style="margin:0">Scripting Battle</h1>
+        <p style="color: #94a3b8;">54 Roles Available • Scan to Join</p>
+        <div id="qrcode"></div>
+        <div style="font-size: 0.8rem; color: #475569;">Connect to the shared Wi-Fi first</div>
+    </div>
+
+    <div id="participant-view" class="hidden">
+        <div id="assignment-card" class="card">
+            <h1 id="team-display" style="margin-top:0; font-size: 2.2rem;">TEAM</h1>
+            <div class="topic-id" id="point-id">CRITERIA #0</div>
+            <div class="topic-name" id="point-title">Loading Topic...</div>
+            <div class="instruction" id="point-desc"></div>
+        </div>
+        <p style="margin-top: 25px; font-size: 0.7rem; opacity: 0.4;">Assignment locked to this device fingerprint.</p>
+    </div>
+</div>
+
+<script>
+// The 27 Point Comparison List
+const comparisonPoints = [
+    { t: "Type System", js: "Dynamic", ts: "Static" },
+    { t: "Superset Relationship", js: "Base language", ts: "Extension" },
+    { t: "Variable Reassignment", js: "Flexible", ts: "Strict" },
+    { t: "Abstract Classes", js: "Prototypal", ts: "Structural" },
+    { t: "Type Inference", js: "None", ts: "Advanced" },
+    { t: "Superset Definition", js: "Core", ts: "Syntactic Superset" },
+    { t: "Interfaces", js: "Implicit/Duck typing", ts: "Explicit contracts" },
+    { t: "Enums", js: "Manual objects", ts: "Native keyword" },
+    { t: "Generics", js: "Absent", ts: "Full <T> support" },
+    { t: "Optional Parameters", js: "Implicitly undefined", ts: "Explicit ?" },
+    { t: "Function Overloading", js: "Logic-based", ts: "Signature-based" },
+    { t: "Access Modifiers", js: "Naming conventions", ts: "private/protected" },
+    { t: "Union/Intersection Types", js: "Not supported", ts: "| and & types" },
+    { t: "Tuples", js: "Standard arrays", ts: "Strict positional pairs" },
+    { t: "Decorators", js: "Stage 3 proposal", ts: "Legacy support" },
+    { t: "Error Detection", js: "Runtime", ts: "Compile-time" },
+    { t: "IntelliSense/IDE Support", js: "Basic heuristics", ts: "Rich definitions" },
+    { t: "Code Refactoring", js: "Risky/Manual", ts: "Safe/Automated" },
+    { t: "Learning Curve", js: "Low/Easy", ts: "Moderate/Type-heavy" },
+    { t: "Code Documentation", js: "Manual/JSDoc", ts: "Inherent/Self-documenting" },
+    { t: "Null/Undefined Safety", js: "Permissive", ts: "Strict checks" },
+    { t: "Maintenance & Velocity", js: "Initial speed", ts: "Long-term scalability" },
+    { t: "Compilation & Build", js: "Native browser", ts: "Transpilation" },
+    { t: "Ecosystem & Libraries", js: "Original source", ts: "Typed wrappers" },
+    { t: "Project Scale", js: "Small/Prototypes", ts: "Large/Enterprise" },
+    { t: "Browser Support", js: "Universal", ts: "Target-based" },
+    { t: "Tooling Configuration", js: "Minimal", ts: "tsconfig.json" }
+];
+
+// Generates a consistent hash for the device
+function generateDeviceHash() {
+    const fingerprint = [
+        navigator.userAgent,
+        screen.width,
+        screen.height,
+        navigator.language,
+        navigator.hardwareConcurrency
+    ].join('|');
+    
+    let hash = 0;
+    for (let i = 0; i < fingerprint.length; i++) {
+        hash = ((hash << 5) - hash) + fingerprint.charCodeAt(i);
+        hash |= 0;
+    }
+    return Math.abs(hash);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    if (urlParams.has('join')) {
+        // --- PARTICIPANT LOGIC ---
+        document.getElementById('host-view').classList.add('hidden');
+        document.getElementById('participant-view').classList.remove('hidden');
+
+        // Check for existing assignment to prevent re-rolls
+        let savedSlot = localStorage.getItem("battle_slot_54");
+        if (!savedSlot) {
+            const hash = generateDeviceHash();
+            savedSlot = hash % 54; // Spread across 54 unique slots
+            localStorage.setItem("battle_slot_54", savedSlot);
+        } else {
+            savedSlot = parseInt(savedSlot);
+        }
+
+        const isTS = savedSlot >= 27;
+        const topicIdx = isTS ? savedSlot - 27 : savedSlot;
+        const topic = comparisonPoints[topicIdx];
+
+        // UI Updates
+        const card = document.getElementById('assignment-card');
+        const teamTitle = document.getElementById('team-display');
+        
+        teamTitle.innerText = isTS ? "TEAM TYPESCRIPT" : "TEAM JAVASCRIPT";
+        card.classList.add(isTS ? 'ts-team' : 'js-team');
+        
+        document.getElementById('point-id').innerText = `CRITERIA POINT #${topicIdx + 1}`;
+        document.getElementById('point-title').innerText = topic.t;
+        document.getElementById('point-desc').innerText = `Defend this: ${isTS ? topic.ts : topic.js}`;
+
+    } else {
+        // --- HOST LOGIC ---
+        const scanUrl = window.location.href + (window.location.href.includes('?') ? '&' : '?') + 'join=true';
+        new QRCode(document.getElementById("qrcode"), {
+            text: scanUrl,
+            width: 250,
+            height: 250,
+            correctLevel: QRCode.CorrectLevel.H
+        });
+    }
+});
+</script>
+</body>
+</html>
