@@ -3,130 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scripting Battle | Live Tracker</title>
+    <title>Balanced Battle Tracker</title>
     <style>
-        /* Glassmorphism Design */
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 0;
-            color: white;
-        }
-        .container {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 2rem;
-            border-radius: 15px;
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-            text-align: center;
-            width: 90%;
-            max-width: 400px;
-        }
-        input {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
-            border: none;
-            outline: none;
-        }
-        button {
-            background: #ff4757;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.3s;
-        }
-        button:hover {
-            background: #ff6b81;
-            transform: scale(1.05);
-        }
-        #status {
-            margin-top: 15px;
-            font-size: 0.9rem;
-        }
+        body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: #1e293b; padding: 30px; border-radius: 15px; width: 90%; max-width: 400px; border: 1px solid #334155; text-align: center; }
+        .session-tag { background: #3b82f6; font-size: 0.7rem; padding: 4px 10px; border-radius: 10px; margin-bottom: 10px; display: inline-block; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: white; box-sizing: border-box; }
+        button { width: 100%; background: #22c55e; color: white; padding: 15px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        #badge { display: none; margin-top: 20px; padding: 20px; border-radius: 10px; background: #334155; border: 2px solid #22c55e; }
+        .team-alpha { border-color: #3b82f6 !important; color: #3b82f6; }
+        .team-beta { border-color: #ef4444 !important; color: #ef4444; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Join the Battle</h2>
-    <p>Enter your details to register your points</p>
+    <div class="session-tag" id="sessionDisplay"></div>
     
-    <input type="text" id="participantName" placeholder="Your Name" required>
-    <input type="text" id="teamName" placeholder="Team Name" required>
-    <input type="text" id="topic" placeholder="Topic Title" required>
-    <input type="number" id="points" placeholder="Points" value="10">
+    <div id="setup-form">
+        <h2>Join the Battle</h2>
+        <p>A Topic and Team will be assigned to you.</p>
+        <input type="text" id="userName" placeholder="Your Full Name">
+        <button onclick="processEntry()">GET MY ROLE</button>
+    </div>
+
+    <div id="badge">
+        <h3 id="display-name"></h3>
+        <p>TEAM: <strong id="display-team"></strong></p>
+        <h1 id="display-topic" style="color: #fbbf24;"></h1>
+        <p style="font-size: 0.8rem; color: #94a3b8;">Fingerprint: <span id="display-fp"></span></p>
+    </div>
     
-    <button onclick="submitToGoogle()">Submit Entry</button>
     <div id="status"></div>
 </div>
 
 <script>
-    // --- UPDATED CONFIGURATION WITH YOUR IDS ---
+    // --- 1. THE SESSION SWITCH (Change "v1" to "v2" for the second 54 people) ---
+    const SESSION_ID = "battle_session_v1"; 
+
+    // --- 2. GOOGLE FORM CONFIG ---
     const FORM_ID = "1FAIpQLScA0rkdfJ9nSYYN5i9tn4xn_7Y-tcW2pkRLodEWSIBRY0SyQg";
     const ENTRY_IDS = {
         name: "entry.871428446",
         team: "entry.1623041267",
-        topic: "entry.1569986237",
-        point: "entry.1509555108"
+        session: "entry.1569986237",
+        fingerprint: "entry.1509555108"
     };
 
-    async function submitToGoogle() {
-        const statusDiv = document.getElementById('status');
-        const name = document.getElementById('participantName').value;
-        const team = document.getElementById('teamName').value;
-        const topic = document.getElementById('topic').value;
-        const point = document.getElementById('points').value;
+    document.getElementById('sessionDisplay').innerText = "SESSION: " + SESSION_ID;
+    checkReset();
 
-        if (!name || !team || !topic) {
-            statusDiv.innerText = "❌ Please fill all fields!";
-            return;
+    function getFingerprint() {
+        const info = window.navigator.userAgent + window.screen.width;
+        return btoa(info).substring(0, 10);
+    }
+
+    function checkReset() {
+        const savedSession = localStorage.getItem("active_session");
+        if (savedSession !== SESSION_ID) {
+            localStorage.clear(); 
+            localStorage.setItem("active_session", SESSION_ID);
+        } else if (localStorage.getItem("userName")) {
+            showBadge();
         }
+    }
 
-        statusDiv.innerText = "⏳ Sending to battle logs...";
+    async function processEntry() {
+        const name = document.getElementById('userName').value;
+        const fp = getFingerprint();
 
-        // Construct the Google Form submission URL
-        const formUrl = `https://docs.google.com/forms/d/e/${FORM_ID}/formResponse`;
+        if (!name) return alert("Please enter your name!");
+
+        // --- LOAD BALANCER LOGIC ---
+        // We use a timestamp-based sequence to simulate an arrival order
+        const arrivalOrder = Date.now(); 
         
-        // Use URLSearchParams to format data correctly for Google
+        // Team Split (50/50)
+        const team = (arrivalOrder % 2 === 0) ? "ALPHA" : "BETA";
+        
+        // Topic Split (1-27)
+        // Using modulo 27 ensures that for every 54 entries, each topic appears twice
+        const topicNum = (arrivalOrder % 27) + 1;
+        const topicName = "Topic #" + topicNum;
+
+        // Save locally
+        localStorage.setItem("userName", name);
+        localStorage.setItem("userTeam", team);
+        localStorage.setItem("userTopic", topicName);
+        
+        // Send to Google
+        sendToGoogle(name, team, SESSION_ID, fp + " | " + topicName);
+        showBadge();
+    }
+
+    function showBadge() {
+        const team = localStorage.getItem("userTeam");
+        const badge = document.getElementById('badge');
+        
+        document.getElementById('setup-form').style.display = 'none';
+        badge.style.display = 'block';
+        badge.className = team === "ALPHA" ? "team-alpha" : "team-beta";
+
+        document.getElementById('display-name').innerText = localStorage.getItem("userName");
+        document.getElementById('display-team').innerText = team;
+        document.getElementById('display-topic').innerText = localStorage.getItem("userTopic");
+        document.getElementById('display-fp').innerText = getFingerprint();
+    }
+
+    function sendToGoogle(name, team, session, fp) {
+        const formUrl = `https://docs.google.com/forms/d/e/${FORM_ID}/formResponse`;
         const formData = new URLSearchParams();
         formData.append(ENTRY_IDS.name, name);
         formData.append(ENTRY_IDS.team, team);
-        formData.append(ENTRY_IDS.topic, topic);
-        formData.append(ENTRY_IDS.point, point);
+        formData.append(ENTRY_IDS.session, session);
+        formData.append(ENTRY_IDS.fingerprint, fp);
 
-        try {
-            await fetch(formUrl, {
-                method: 'POST',
-                mode: 'no-cors', // Crucial for Google Forms
-                body: formData
-            });
-
-            // Since mode is 'no-cors', we won't get a 'success' response back,
-            // but the data will still be sent to the sheet.
-            statusDiv.innerText = "✅ Entry Submitted! Check the Sheet.";
-            
-            // Optional: Clear fields after 2 seconds
-            setTimeout(() => {
-                document.getElementById('participantName').value = "";
-                statusDiv.innerText = "";
-            }, 2000);
-
-        } catch (error) {
-            console.error('Error!', error);
-            statusDiv.innerText = "❌ Connection Error.";
-        }
+        fetch(formUrl, { method: 'POST', mode: 'no-cors', body: formData });
     }
 </script>
-
 </body>
 </html>
