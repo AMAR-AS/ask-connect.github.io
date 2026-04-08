@@ -3,123 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Balanced Battle Tracker</title>
+    <title>JS vs TS: Expert Battle Master</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .container { background: #1e293b; padding: 30px; border-radius: 15px; width: 90%; max-width: 400px; border: 1px solid #334155; text-align: center; }
-        .session-tag { background: #3b82f6; font-size: 0.7rem; padding: 4px 10px; border-radius: 10px; margin-bottom: 10px; display: inline-block; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: white; box-sizing: border-box; }
-        button { width: 100%; background: #22c55e; color: white; padding: 15px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        #badge { display: none; margin-top: 20px; padding: 20px; border-radius: 10px; background: #334155; border: 2px solid #22c55e; }
-        .team-alpha { border-color: #3b82f6 !important; color: #3b82f6; }
-        .team-beta { border-color: #ef4444 !important; color: #ef4444; }
+        :root { --js: #f7df1e; --ts: #3178c6; --bg: #0f172a; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; text-align: center; }
+        .container { background: #1e293b; padding: 2.5rem; border-radius: 25px; width: 90%; max-width: 420px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); border: 1px solid #334155; }
+        .hidden { display: none; }
+        #qrcode { background: white; padding: 15px; display: inline-block; border-radius: 15px; margin: 20px 0; border: 5px solid #38bdf8; }
+        .session-tag { background: #38bdf8; color: #0f172a; font-size: 0.7rem; padding: 4px 12px; border-radius: 20px; font-weight: bold; margin-bottom: 15px; display: inline-block; text-transform: uppercase; }
+        input { width: 100%; padding: 12px; margin: 15px 0; border-radius: 8px; border: none; background: #0f172a; color: white; box-sizing: border-box; text-align: center; font-size: 1rem; border: 1px solid #334155; }
+        button { width: 100%; background: #22c55e; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1.1rem; transition: 0.3s; }
+        button:hover { background: #16a34a; transform: translateY(-2px); }
+        .card { border-top: 12px solid; padding: 30px; border-radius: 15px; background: rgba(255,255,255,0.05); transition: 0.5s; }
+        .js-team { border-color: var(--js); color: var(--js); }
+        .ts-team { border-color: var(--ts); color: var(--ts); }
+        .topic-name { font-size: 1.6rem; font-weight: 800; margin: 15px 0; color: white; }
+        .instruction { font-size: 1.1rem; padding: 12px; background: rgba(255,255,255,0.1); border-radius: 8px; margin-top: 20px; color: #38bdf8; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="session-tag" id="sessionDisplay"></div>
-    
-    <div id="setup-form">
-        <h2>Join the Battle</h2>
-        <p>A Topic and Team will be assigned to you.</p>
-        <input type="text" id="userName" placeholder="Your Full Name">
-        <button onclick="processEntry()">GET MY ROLE</button>
+    <div id="session-label" class="session-tag"></div>
+
+    <div id="host-view">
+        <h1 style="margin:0">Battle Master</h1>
+        <p style="color: #94a3b8;">Scanning for Battle Assignments</p>
+        <div id="qrcode"></div>
+        <div style="font-size: 0.8rem; color: #475569;">Project this on the main screen</div>
     </div>
 
-    <div id="badge">
-        <h3 id="display-name"></h3>
-        <p>TEAM: <strong id="display-team"></strong></p>
-        <h1 id="display-topic" style="color: #fbbf24;"></h1>
-        <p style="font-size: 0.8rem; color: #94a3b8;">Fingerprint: <span id="display-fp"></span></p>
+    <div id="entry-view" class="hidden">
+        <h1>Identify Expert</h1>
+        <p>Enter your name to receive your role.</p>
+        <input type="text" id="expertName" placeholder="Full Name" autocomplete="off">
+        <button onclick="assignAndSubmit()">JOIN BATTLE</button>
     </div>
-    
-    <div id="status"></div>
+
+    <div id="participant-view" class="hidden">
+        <div id="assignment-card" class="card">
+            <h1 id="team-display" style="margin-top:0; font-size: 2rem;">TEAM</h1>
+            <div id="point-id" style="font-size: 0.8rem; letter-spacing: 2px; opacity: 0.6; color: white;"></div>
+            <div class="topic-name" id="point-title"></div>
+            <div class="instruction" id="point-desc"></div>
+        </div>
+        <p style="margin-top: 25px; font-size: 0.6rem; opacity: 0.4;">FINGERPRINT: <span id="res-fp"></span></p>
+    </div>
 </div>
 
 <script>
-    // --- 1. THE SESSION SWITCH (Change "v1" to "v2" for the second 54 people) ---
-    const SESSION_ID = "battle_session_v1"; 
+// --- CONFIGURATION ---
+const SESSION_ID = "battle_round_1"; // Change to "battle_round_2", etc. for new groups
+const FORM_ID = "1FAIpQLScA0rkdfJ9nSYYN5i9tn4xn_7Y-tcW2pkRLodEWSIBRY0SyQg";
+const ENTRY_IDS = {
+    name: "entry.871428446",
+    team: "entry.1623041267",
+    session: "entry.1569986237",
+    fingerprint: "entry.1509555108"
+};
 
-    // --- 2. GOOGLE FORM CONFIG ---
-    const FORM_ID = "1FAIpQLScA0rkdfJ9nSYYN5i9tn4xn_7Y-tcW2pkRLodEWSIBRY0SyQg";
-    const ENTRY_IDS = {
-        name: "entry.871428446",
-        team: "entry.1623041267",
-        session: "entry.1569986237",
-        fingerprint: "entry.1509555108"
-    };
+const comparisonPoints = [
+    { t: "Type System", js: "Dynamic", ts: "Static" },
+    { t: "Superset Relationship", js: "Base language", ts: "Extension" },
+    { t: "Variable Reassignment", js: "Flexible", ts: "Strict" },
+    { t: "Abstract Classes", js: "Prototypal", ts: "Structural" },
+    { t: "Type Inference", js: "None", ts: "Advanced" },
+    { t: "Superset Definition", js: "Core", ts: "Syntactic Superset" },
+    { t: "Interfaces", js: "Implicit/Duck typing", ts: "Explicit contracts" },
+    { t: "Enums", js: "Manual objects", ts: "Native keyword" },
+    { t: "Generics", js: "Absent", ts: "Full <T> support" },
+    { t: "Optional Parameters", js: "Implicitly undefined", ts: "Explicit ?" },
+    { t: "Function Overloading", js: "Logic-based", ts: "Signature-based" },
+    { t: "Access Modifiers", js: "Naming conventions", ts: "private/protected" },
+    { t: "Union/Intersection Types", js: "Not supported", ts: "| and & types" },
+    { t: "Tuples", js: "Standard arrays", ts: "Strict positional pairs" },
+    { t: "Decorators", js: "Stage 3 proposal", ts: "Legacy support" },
+    { t: "Error Detection", js: "Runtime", ts: "Compile-time" },
+    { t: "IntelliSense/IDE Support", js: "Basic heuristics", ts: "Rich definitions" },
+    { t: "Code Refactoring", js: "Risky/Manual", ts: "Safe/Automated" },
+    { t: "Learning Curve", js: "Low/Easy", ts: "Moderate/Type-heavy" },
+    { t: "Code Documentation", js: "Manual/JSDoc", ts: "Inherent/Self-documenting" },
+    { t: "Null/Undefined Safety", js: "Permissive", ts: "Strict checks" },
+    { t: "Maintenance & Velocity", js: "Initial speed", ts: "Long-term scalability" },
+    { t: "Compilation & Build", js: "Native browser", ts: "Transpilation" },
+    { t: "Ecosystem & Libraries", js: "Original source", ts: "Typed wrappers" },
+    { t: "Project Scale", js: "Small/Prototypes", ts: "Large/Enterprise" },
+    { t: "Browser Support", js: "Universal", ts: "Target-based" },
+    { t: "Tooling Configuration", js: "Minimal", ts: "tsconfig.json" }
+];
 
-    document.getElementById('sessionDisplay').innerText = "SESSION: " + SESSION_ID;
-    checkReset();
+function getFingerprint() {
+    const info = [navigator.userAgent, screen.width, screen.height].join('|');
+    let hash = 0;
+    for (let i = 0; i < info.length; i++) {
+        hash = ((hash << 5) - hash) + info.charCodeAt(i);
+        hash |= 0;
+    }
+    return Math.abs(hash);
+}
 
-    function getFingerprint() {
-        const info = window.navigator.userAgent + window.screen.width;
-        return btoa(info).substring(0, 10);
+document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById('session-label').innerText = SESSION_ID;
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    // RESET PROTOCOL: Clear old data if session name changed
+    if (localStorage.getItem("active_session") !== SESSION_ID) {
+        localStorage.clear();
+        localStorage.setItem("active_session", SESSION_ID);
     }
 
-    function checkReset() {
-        const savedSession = localStorage.getItem("active_session");
-        if (savedSession !== SESSION_ID) {
-            localStorage.clear(); 
-            localStorage.setItem("active_session", SESSION_ID);
-        } else if (localStorage.getItem("userName")) {
-            showBadge();
+    if (urlParams.has('join')) {
+        document.getElementById('host-view').classList.add('hidden');
+        if (localStorage.getItem("userName")) {
+            showAssignment();
+        } else {
+            document.getElementById('entry-view').classList.remove('hidden');
         }
+    } else {
+        // Generate QR for the current URL
+        const scanUrl = window.location.href + (window.location.href.includes('?') ? '&' : '?') + 'join=true';
+        new QRCode(document.getElementById("qrcode"), { text: scanUrl, width: 250, height: 250 });
     }
+});
 
-    async function processEntry() {
-        const name = document.getElementById('userName').value;
-        const fp = getFingerprint();
+async function assignAndSubmit() {
+    const name = document.getElementById('expertName').value.trim();
+    if (!name) return alert("Please enter your name!");
 
-        if (!name) return alert("Please enter your name!");
+    const hash = getFingerprint();
+    // LOAD BALANCER: Perfectly splits 54 people into 2 teams and 27 topics
+    const slot = hash % 54; 
+    const isTS = slot >= 27;
+    const topicIdx = isTS ? slot - 27 : slot;
+    const team = isTS ? "TEAM TYPESCRIPT" : "TEAM JAVASCRIPT";
 
-        // --- LOAD BALANCER LOGIC ---
-        // We use a timestamp-based sequence to simulate an arrival order
-        const arrivalOrder = Date.now(); 
-        
-        // Team Split (50/50)
-        const team = (arrivalOrder % 2 === 0) ? "ALPHA" : "BETA";
-        
-        // Topic Split (1-27)
-        // Using modulo 27 ensures that for every 54 entries, each topic appears twice
-        const topicNum = (arrivalOrder % 27) + 1;
-        const topicName = "Topic #" + topicNum;
+    localStorage.setItem("userName", name);
+    localStorage.setItem("userSlot", slot);
 
-        // Save locally
-        localStorage.setItem("userName", name);
-        localStorage.setItem("userTeam", team);
-        localStorage.setItem("userTopic", topicName);
-        
-        // Send to Google
-        sendToGoogle(name, team, SESSION_ID, fp + " | " + topicName);
-        showBadge();
-    }
+    // BACKGROUND SYNC: Send to Google Form
+    const formData = new URLSearchParams();
+    formData.append(ENTRY_IDS.name, name);
+    formData.append(ENTRY_IDS.team, team);
+    formData.append(ENTRY_IDS.session, SESSION_ID);
+    formData.append(ENTRY_IDS.fingerprint, `${hash} | Slot ${slot}`);
 
-    function showBadge() {
-        const team = localStorage.getItem("userTeam");
-        const badge = document.getElementById('badge');
-        
-        document.getElementById('setup-form').style.display = 'none';
-        badge.style.display = 'block';
-        badge.className = team === "ALPHA" ? "team-alpha" : "team-beta";
+    fetch(`https://docs.google.com/forms/d/e/${FORM_ID}/formResponse`, {
+        method: 'POST', mode: 'no-cors', body: formData
+    });
 
-        document.getElementById('display-name').innerText = localStorage.getItem("userName");
-        document.getElementById('display-team').innerText = team;
-        document.getElementById('display-topic').innerText = localStorage.getItem("userTopic");
-        document.getElementById('display-fp').innerText = getFingerprint();
-    }
+    showAssignment();
+}
 
-    function sendToGoogle(name, team, session, fp) {
-        const formUrl = `https://docs.google.com/forms/d/e/${FORM_ID}/formResponse`;
-        const formData = new URLSearchParams();
-        formData.append(ENTRY_IDS.name, name);
-        formData.append(ENTRY_IDS.team, team);
-        formData.append(ENTRY_IDS.session, session);
-        formData.append(ENTRY_IDS.fingerprint, fp);
+function showAssignment() {
+    document.getElementById('entry-view').classList.add('hidden');
+    document.getElementById('participant-view').classList.remove('hidden');
 
-        fetch(formUrl, { method: 'POST', mode: 'no-cors', body: formData });
-    }
+    const slot = parseInt(localStorage.getItem("userSlot"));
+    const isTS = slot >= 27;
+    const topicIdx = isTS ? slot - 27 : slot;
+    const topic = comparisonPoints[topicIdx];
+
+    const card = document.getElementById('assignment-card');
+    document.getElementById('team-display').innerText = isTS ? "TEAM TYPESCRIPT" : "TEAM JAVASCRIPT";
+    card.classList.add(isTS ? 'ts-team' : 'js-team');
+    
+    document.getElementById('point-id').innerText = `ARGUMENT POINT #${topicIdx + 1}`;
+    document.getElementById('point-title').innerText = topic.t;
+    document.getElementById('point-desc').innerText = `DEFEND: ${isTS ? topic.ts : topic.js}`;
+    document.getElementById('res-fp').innerText = getFingerprint();
+}
 </script>
 </body>
 </html>
