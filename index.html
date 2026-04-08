@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JS vs TS: Live Tracking Battle</title>
+    <title>JS vs TS: Live Master Tracker</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         :root { --js: #f7df1e; --ts: #3178c6; --bg: #0f172a; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: white; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; text-align: center; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; text-align: center; }
         .container { background: #1e293b; padding: 2rem; border-radius: 25px; width: 90%; max-width: 420px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
         .hidden { display: none; }
         #qrcode { background: white; padding: 15px; display: inline-block; border-radius: 12px; margin: 20px 0; }
@@ -23,27 +23,33 @@
 <div class="container">
     <div id="host-view">
         <h1 style="margin:0">Scripting Battle</h1>
-        <p style="color: #94a3b8;">Scanning Live Tracker Enabled</p>
+        <p style="color: #94a3b8;">Scanning Live Tracker (GitHub + Sheets)</p>
         <div id="qrcode"></div>
-        <p style="font-size: 0.8rem; color: #475569;">Connect to Wi-Fi • Moderator is watching Webhook.site</p>
+        <p style="font-size: 0.8rem; color: #475569;">Moderator: Check your Google Sheet for live updates</p>
     </div>
 
     <div id="user-view" class="hidden">
         <div id="role-card" class="card">
             <div id="user-label" style="text-transform: uppercase; letter-spacing: 2px; opacity: 0.6; margin-bottom: 5px;"></div>
             <h1 id="team-label" style="margin-top:0; font-size: 2.2rem;"></h1>
-            <div style="font-size: 0.8rem; opacity: 0.5;">CRITERIA POINT #<span id="point-num"></span></div>
             <div id="point-title" class="topic-name"></div>
             <div id="point-desc" class="instruction"></div>
         </div>
-        <p style="margin-top: 25px; font-size: 0.7rem; opacity: 0.3;">Identity locked to this session.</p>
     </div>
 </div>
 
 <script>
-// --- MODERATOR SETUP ---
-const WEBHOOK_URL = "https://webhook.site/359ec9d3-69ae-468a-9cbe-32b76336ceb5"; 
-const SESSION_ID = "battle_session_v1"; // Change to 'v2' to reset all users at once
+// --- MASTER CONFIGURATION ---
+const FORM_ID = "1ebulLmAvVkMvACnhGZJGQbXQObgwLTZw3isPupEY6Og"; 
+const ENTRY_IDS = {
+    name: "entry.1775554771",  
+    team: "entry.296101000",   
+    topic: "entry.1775554772", 
+    point: "entry.1775554773"  
+};
+
+const SESSION_ID = "battle_v1"; // Change to 'v2' to reset all users
+const FORM_URL = `https://docs.google.com/forms/d/e/${FORM_ID}/formResponse`;
 
 const topics = [
     { t: "Type System", js: "Dynamic", ts: "Static" },
@@ -82,61 +88,52 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById('host-view').classList.add('hidden');
         document.getElementById('user-view').classList.remove('hidden');
 
-        // 1. Get/Set Name
         let name = localStorage.getItem("battle_name");
         if (!name) {
-            name = prompt("Enter your name for the :");
-            if (!name) name = "User_" + Math.floor(Math.random() * 999);
+            name = prompt("Enter your Name for the battle:");
+            if (!name) name = "User_" + Math.floor(Math.random() * 99);
             localStorage.setItem("battle_name", name);
         }
 
-        // 2. Get/Set Slot (Deterministic 0-53)
         let slot = localStorage.getItem(SESSION_ID);
         if (!slot) {
-            // Fingerprint hashing to help spread out the 'random' distribution
-            const hash = name.length + screen.width + (new Date().getSeconds());
-            slot = hash % 54; 
+            slot = Math.floor(Math.random() * 54);
             localStorage.setItem(SESSION_ID, slot);
 
-            // 3. SEND TO WEBHOOK (The Tracker)
+            // Assignment Data
             const isTS = slot >= 27;
             const idx = isTS ? slot - 27 : slot;
-            const team = isTS ? "TypeScript" : "JavaScript";
-            
-            fetch(WEBHOOK_URL, {
-                method: "POST",
-                mode: "no-cors",
-                body: JSON.stringify({ 
-                    participant: name, 
-                    team: team, 
-                    topic: topics[idx].t, 
-                    point: idx + 1,
-                    time: new Date().toLocaleTimeString()
-                })
-            });
+            const team = isTS ? "TS" : "JS";
+            const topic = topics[idx];
+
+            // Submit to Google Sheets
+            const body = new URLSearchParams();
+            body.append(ENTRY_IDS.name, name);
+            body.append(ENTRY_IDS.team, team);
+            body.append(ENTRY_IDS.topic, topic.t);
+            body.append(ENTRY_IDS.point, idx + 1);
+
+            fetch(FORM_URL, { method: "POST", mode: "no-cors", body: body });
         }
 
-        renderUserView(parseInt(slot), name);
+        render(parseInt(slot), name);
     } else {
         new QRCode(document.getElementById("qrcode"), {
-            text: window.location.href + (window.location.href.includes('?') ? '&' : '?') + "join=true",
+            text: window.location.href + "?join=true",
             width: 250, height: 250
         });
     }
 });
 
-function renderUserView(slot, name) {
+function render(slot, name) {
     const isTS = slot >= 27;
     const idx = isTS ? slot - 27 : slot;
     const topic = topics[idx];
-    
     document.getElementById('user-label').innerText = name;
     document.getElementById('team-label').innerText = "TEAM " + (isTS ? "TYPESCRIPT" : "JAVASCRIPT");
-    document.getElementById('team-label').style.color = isTS ? "var(--ts)" : "var(--js)";
-    document.getElementById('role-card').className = "card " + (isTS ? "ts-team" : "js-team");
-    document.getElementById('point-num').innerText = idx + 1;
     document.getElementById('point-title').innerText = topic.t;
-    document.getElementById('point-desc').innerText = "YOUR ARGUMENT: " + (isTS ? topic.ts : topic.js);
+    document.getElementById('point-desc').innerText = "ARGUMENT: " + (isTS ? topic.ts : topic.js);
+    document.getElementById('role-card').className = "card " + (isTS ? "ts-team" : "js-team");
 }
 </script>
 </body>
