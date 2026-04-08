@@ -18,8 +18,9 @@
         .card { border-top: 12px solid; padding: 30px; border-radius: 15px; background: rgba(255,255,255,0.05); transition: 0.5s; }
         .js-team { border-color: var(--js); color: var(--js); }
         .ts-team { border-color: var(--ts); color: var(--ts); }
-        .topic-name { font-size: 1.6rem; font-weight: 800; margin: 15px 0; color: white; }
+        .topic-name { font-size: 1.8rem; font-weight: 800; margin: 15px 0; color: white; }
         .instruction { font-size: 1.1rem; padding: 12px; background: rgba(255,255,255,0.1); border-radius: 8px; margin-top: 20px; color: #38bdf8; }
+        .expert-id { font-size: 0.7rem; letter-spacing: 2px; opacity: 0.6; color: white; text-transform: uppercase; }
     </style>
 </head>
 <body>
@@ -31,7 +32,7 @@
         <h1 style="margin:0">Battle Master</h1>
         <p style="color: #94a3b8;">Scanning for Battle Assignments</p>
         <div id="qrcode"></div>
-        <div style="font-size: 0.8rem; color: #475569;">Project this on the main screen</div>
+        <div style="font-size: 0.8rem; color: #475569;">Project this for the group</div>
     </div>
 
     <div id="entry-view" class="hidden">
@@ -44,7 +45,7 @@
     <div id="participant-view" class="hidden">
         <div id="assignment-card" class="card">
             <h1 id="team-display" style="margin-top:0; font-size: 2rem;">TEAM</h1>
-            <div id="point-id" style="font-size: 0.8rem; letter-spacing: 2px; opacity: 0.6; color: white;"></div>
+            <div class="expert-id" id="point-id"></div>
             <div class="topic-name" id="point-title"></div>
             <div class="instruction" id="point-desc"></div>
         </div>
@@ -54,7 +55,7 @@
 
 <script>
 // --- CONFIGURATION ---
-const SESSION_ID = "battle_round_1"; // Change to "battle_round_2", etc. for new groups
+const SESSION_ID = "battle_round_1"; // Change to "battle_round_2" to reset for next 54
 const FORM_ID = "1FAIpQLScA0rkdfJ9nSYYN5i9tn4xn_7Y-tcW2pkRLodEWSIBRY0SyQg";
 const ENTRY_IDS = {
     name: "entry.871428446",
@@ -107,7 +108,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('session-label').innerText = SESSION_ID;
     const urlParams = new URLSearchParams(window.location.search);
     
-    // RESET PROTOCOL: Clear old data if session name changed
+    // RESET PROTOCOL
     if (localStorage.getItem("active_session") !== SESSION_ID) {
         localStorage.clear();
         localStorage.setItem("active_session", SESSION_ID);
@@ -121,7 +122,6 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById('entry-view').classList.remove('hidden');
         }
     } else {
-        // Generate QR for the current URL
         const scanUrl = window.location.href + (window.location.href.includes('?') ? '&' : '?') + 'join=true';
         new QRCode(document.getElementById("qrcode"), { text: scanUrl, width: 250, height: 250 });
     }
@@ -132,21 +132,20 @@ async function assignAndSubmit() {
     if (!name) return alert("Please enter your name!");
 
     const hash = getFingerprint();
-    // LOAD BALANCER: Perfectly splits 54 people into 2 teams and 27 topics
     const slot = hash % 54; 
     const isTS = slot >= 27;
     const topicIdx = isTS ? slot - 27 : slot;
+    const topicData = comparisonPoints[topicIdx];
     const team = isTS ? "TEAM TYPESCRIPT" : "TEAM JAVASCRIPT";
 
     localStorage.setItem("userName", name);
     localStorage.setItem("userSlot", slot);
 
-    // BACKGROUND SYNC: Send to Google Form
     const formData = new URLSearchParams();
     formData.append(ENTRY_IDS.name, name);
     formData.append(ENTRY_IDS.team, team);
     formData.append(ENTRY_IDS.session, SESSION_ID);
-    formData.append(ENTRY_IDS.fingerprint, `${hash} | Slot ${slot}`);
+    formData.append(ENTRY_IDS.fingerprint, `${hash} | Topic: ${topicData.t}`);
 
     fetch(`https://docs.google.com/forms/d/e/${FORM_ID}/formResponse`, {
         method: 'POST', mode: 'no-cors', body: formData
@@ -168,7 +167,8 @@ function showAssignment() {
     document.getElementById('team-display').innerText = isTS ? "TEAM TYPESCRIPT" : "TEAM JAVASCRIPT";
     card.classList.add(isTS ? 'ts-team' : 'js-team');
     
-    document.getElementById('point-id').innerText = `ARGUMENT POINT #${topicIdx + 1}`;
+    // UPDATED: Now shows the Name of the Criteria instead of just "Point #1"
+    document.getElementById('point-id').innerText = `EXPERT IN: ${topic.t}`;
     document.getElementById('point-title').innerText = topic.t;
     document.getElementById('point-desc').innerText = `DEFEND: ${isTS ? topic.ts : topic.js}`;
     document.getElementById('res-fp').innerText = getFingerprint();
