@@ -3,31 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JS vs TS: The 54-Expert Battle</title>
+    <title>JS vs TS: Live Tracking Battle</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         :root { --js: #f7df1e; --ts: #3178c6; --bg: #0f172a; }
-        body { 
-            font-family: 'Segoe UI', Tahoma, sans-serif; 
-            background: var(--bg); color: white; margin: 0; 
-            display: flex; justify-content: center; align-items: center; 
-            min-height: 100vh; text-align: center; 
-        }
-        .container { 
-            background: #1e293b; padding: 2.5rem; border-radius: 25px; 
-            width: 90%; max-width: 420px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); 
-        }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: white; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; text-align: center; }
+        .container { background: #1e293b; padding: 2rem; border-radius: 25px; width: 90%; max-width: 420px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
         .hidden { display: none; }
-        #qrcode { background: white; padding: 15px; display: inline-block; border-radius: 15px; margin: 20px 0; }
-        
-        /* Assignment Card */
-        .card { border-top: 12px solid; padding: 30px; border-radius: 15px; background: rgba(255,255,255,0.05); }
-        .js-team { border-color: var(--js); color: var(--js); }
-        .ts-team { border-color: var(--ts); color: var(--ts); }
-        
-        .topic-id { font-size: 0.8rem; letter-spacing: 2px; opacity: 0.6; margin-bottom: 10px; color: white; }
-        .topic-name { font-size: 1.6rem; font-weight: 800; margin: 15px 0; color: white; }
-        .instruction { font-size: 1.1rem; padding: 12px; background: rgba(255,255,255,0.1); border-radius: 8px; margin-top: 20px; color: #38bdf8; }
+        #qrcode { background: white; padding: 15px; display: inline-block; border-radius: 12px; margin: 20px 0; }
+        .card { border-top: 15px solid; padding: 30px; border-radius: 15px; background: rgba(255,255,255,0.03); }
+        .js-team { border-color: var(--js); }
+        .ts-team { border-color: var(--ts); }
+        .topic-name { font-size: 1.6rem; font-weight: 800; margin: 15px 0; }
+        .instruction { font-size: 1.1rem; padding: 12px; background: rgba(56, 189, 248, 0.1); border-radius: 8px; color: #38bdf8; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -35,116 +23,121 @@
 <div class="container">
     <div id="host-view">
         <h1 style="margin:0">Scripting Battle</h1>
-        <p style="color: #94a3b8;">54 Roles Available • Scan to Join</p>
+        <p style="color: #94a3b8;">Scanning Live Tracker Enabled</p>
         <div id="qrcode"></div>
-        <div style="font-size: 0.8rem; color: #475569;">Connect to the shared Wi-Fi first</div>
+        <p style="font-size: 0.8rem; color: #475569;">Connect to Wi-Fi • Moderator is watching Webhook.site</p>
     </div>
 
-    <div id="participant-view" class="hidden">
-        <div id="assignment-card" class="card">
-            <h1 id="team-display" style="margin-top:0; font-size: 2.2rem;">TEAM</h1>
-            <div class="topic-id" id="point-id">CRITERIA #0</div>
-            <div class="topic-name" id="point-title">Loading Topic...</div>
-            <div class="instruction" id="point-desc"></div>
+    <div id="user-view" class="hidden">
+        <div id="role-card" class="card">
+            <div id="user-label" style="text-transform: uppercase; letter-spacing: 2px; opacity: 0.6; margin-bottom: 5px;"></div>
+            <h1 id="team-label" style="margin-top:0; font-size: 2.2rem;"></h1>
+            <div style="font-size: 0.8rem; opacity: 0.5;">CRITERIA POINT #<span id="point-num"></span></div>
+            <div id="point-title" class="topic-name"></div>
+            <div id="point-desc" class="instruction"></div>
         </div>
-        <p style="margin-top: 25px; font-size: 0.7rem; opacity: 0.4;">Assignment locked to this device fingerprint.</p>
+        <p style="margin-top: 25px; font-size: 0.7rem; opacity: 0.3;">Identity locked to this session.</p>
     </div>
 </div>
 
 <script>
-// The 27 Point Comparison List
-const comparisonPoints = [
+// --- MODERATOR SETUP ---
+const WEBHOOK_URL = "https://webhook.site/359ec9d3-69ae-468a-9cbe-32b76336ceb5"; 
+const SESSION_ID = "battle_session_v1"; // Change to 'v2' to reset all users at once
+
+const topics = [
     { t: "Type System", js: "Dynamic", ts: "Static" },
-    { t: "Superset Relationship", js: "Base language", ts: "Extension" },
+    { t: "Superset Relationship", js: "Base", ts: "Extension" },
     { t: "Variable Reassignment", js: "Flexible", ts: "Strict" },
     { t: "Abstract Classes", js: "Prototypal", ts: "Structural" },
     { t: "Type Inference", js: "None", ts: "Advanced" },
-    { t: "Superset Definition", js: "Core", ts: "Syntactic Superset" },
-    { t: "Interfaces", js: "Implicit/Duck typing", ts: "Explicit contracts" },
-    { t: "Enums", js: "Manual objects", ts: "Native keyword" },
-    { t: "Generics", js: "Absent", ts: "Full <T> support" },
-    { t: "Optional Parameters", js: "Implicitly undefined", ts: "Explicit ?" },
+    { t: "Superset Definition", js: "Core", ts: "Syntactic" },
+    { t: "Interfaces", js: "Duck typing", ts: "Explicit contracts" },
+    { t: "Enums", js: "Manual", ts: "Native" },
+    { t: "Generics", js: "Absent", ts: "Full <T>" },
+    { t: "Optional Parameters", js: "Implicit", ts: "Explicit ?" },
     { t: "Function Overloading", js: "Logic-based", ts: "Signature-based" },
-    { t: "Access Modifiers", js: "Naming conventions", ts: "private/protected" },
-    { t: "Union/Intersection Types", js: "Not supported", ts: "| and & types" },
-    { t: "Tuples", js: "Standard arrays", ts: "Strict positional pairs" },
-    { t: "Decorators", js: "Stage 3 proposal", ts: "Legacy support" },
+    { t: "Access Modifiers", js: "Conventions", ts: "private/protected" },
+    { t: "Union Types", js: "No", ts: "| and &" },
+    { t: "Tuples", js: "Arrays", ts: "Strict pairs" },
+    { t: "Decorators", js: "Proposal", ts: "Experimental" },
     { t: "Error Detection", js: "Runtime", ts: "Compile-time" },
-    { t: "IntelliSense/IDE Support", js: "Basic heuristics", ts: "Rich definitions" },
-    { t: "Code Refactoring", js: "Risky/Manual", ts: "Safe/Automated" },
-    { t: "Learning Curve", js: "Low/Easy", ts: "Moderate/Type-heavy" },
-    { t: "Code Documentation", js: "Manual/JSDoc", ts: "Inherent/Self-documenting" },
-    { t: "Null/Undefined Safety", js: "Permissive", ts: "Strict checks" },
-    { t: "Maintenance & Velocity", js: "Initial speed", ts: "Long-term scalability" },
-    { t: "Compilation & Build", js: "Native browser", ts: "Transpilation" },
-    { t: "Ecosystem & Libraries", js: "Original source", ts: "Typed wrappers" },
-    { t: "Project Scale", js: "Small/Prototypes", ts: "Large/Enterprise" },
+    { t: "IDE Support", js: "Basic", ts: "Rich" },
+    { t: "Refactoring", js: "Manual", ts: "Automated" },
+    { t: "Learning Curve", js: "Easy", ts: "Moderate" },
+    { t: "Documentation", js: "JSDoc", ts: "Self-documenting" },
+    { t: "Null Safety", js: "Permissive", ts: "Strict" },
+    { t: "Velocity", js: "Initial speed", ts: "Scalability" },
+    { t: "Compilation", js: "Native", ts: "Transpilation" },
+    { t: "Libraries", js: "Raw", ts: "@types" },
+    { t: "Scale", js: "Small", ts: "Enterprise" },
     { t: "Browser Support", js: "Universal", ts: "Target-based" },
-    { t: "Tooling Configuration", js: "Minimal", ts: "tsconfig.json" }
+    { t: "Configuration", js: "Minimal", ts: "tsconfig" }
 ];
 
-// Generates a consistent hash for the device
-function generateDeviceHash() {
-    const fingerprint = [
-        navigator.userAgent,
-        screen.width,
-        screen.height,
-        navigator.language,
-        navigator.hardwareConcurrency
-    ].join('|');
-    
-    let hash = 0;
-    for (let i = 0; i < fingerprint.length; i++) {
-        hash = ((hash << 5) - hash) + fingerprint.charCodeAt(i);
-        hash |= 0;
-    }
-    return Math.abs(hash);
-}
-
 document.addEventListener("DOMContentLoaded", () => {
-    const urlParams = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(window.location.search);
     
-    if (urlParams.has('join')) {
-        // --- PARTICIPANT LOGIC ---
+    if (params.has('join')) {
         document.getElementById('host-view').classList.add('hidden');
-        document.getElementById('participant-view').classList.remove('hidden');
+        document.getElementById('user-view').classList.remove('hidden');
 
-        // Check for existing assignment to prevent re-rolls
-        let savedSlot = localStorage.getItem("battle_slot_54");
-        if (!savedSlot) {
-            const hash = generateDeviceHash();
-            savedSlot = hash % 54; // Spread across 54 unique slots
-            localStorage.setItem("battle_slot_54", savedSlot);
-        } else {
-            savedSlot = parseInt(savedSlot);
+        // 1. Get/Set Name
+        let name = localStorage.getItem("battle_name");
+        if (!name) {
+            name = prompt("Enter your name for the :");
+            if (!name) name = "User_" + Math.floor(Math.random() * 999);
+            localStorage.setItem("battle_name", name);
         }
 
-        const isTS = savedSlot >= 27;
-        const topicIdx = isTS ? savedSlot - 27 : savedSlot;
-        const topic = comparisonPoints[topicIdx];
+        // 2. Get/Set Slot (Deterministic 0-53)
+        let slot = localStorage.getItem(SESSION_ID);
+        if (!slot) {
+            // Fingerprint hashing to help spread out the 'random' distribution
+            const hash = name.length + screen.width + (new Date().getSeconds());
+            slot = hash % 54; 
+            localStorage.setItem(SESSION_ID, slot);
 
-        // UI Updates
-        const card = document.getElementById('assignment-card');
-        const teamTitle = document.getElementById('team-display');
-        
-        teamTitle.innerText = isTS ? "TEAM TYPESCRIPT" : "TEAM JAVASCRIPT";
-        card.classList.add(isTS ? 'ts-team' : 'js-team');
-        
-        document.getElementById('point-id').innerText = `CRITERIA POINT #${topicIdx + 1}`;
-        document.getElementById('point-title').innerText = topic.t;
-        document.getElementById('point-desc').innerText = `Defend this: ${isTS ? topic.ts : topic.js}`;
+            // 3. SEND TO WEBHOOK (The Tracker)
+            const isTS = slot >= 27;
+            const idx = isTS ? slot - 27 : slot;
+            const team = isTS ? "TypeScript" : "JavaScript";
+            
+            fetch(WEBHOOK_URL, {
+                method: "POST",
+                mode: "no-cors",
+                body: JSON.stringify({ 
+                    participant: name, 
+                    team: team, 
+                    topic: topics[idx].t, 
+                    point: idx + 1,
+                    time: new Date().toLocaleTimeString()
+                })
+            });
+        }
 
+        renderUserView(parseInt(slot), name);
     } else {
-        // --- HOST LOGIC ---
-        const scanUrl = window.location.href + (window.location.href.includes('?') ? '&' : '?') + 'join=true';
         new QRCode(document.getElementById("qrcode"), {
-            text: scanUrl,
-            width: 250,
-            height: 250,
-            correctLevel: QRCode.CorrectLevel.H
+            text: window.location.href + (window.location.href.includes('?') ? '&' : '?') + "join=true",
+            width: 250, height: 250
         });
     }
 });
+
+function renderUserView(slot, name) {
+    const isTS = slot >= 27;
+    const idx = isTS ? slot - 27 : slot;
+    const topic = topics[idx];
+    
+    document.getElementById('user-label').innerText = name;
+    document.getElementById('team-label').innerText = "TEAM " + (isTS ? "TYPESCRIPT" : "JAVASCRIPT");
+    document.getElementById('team-label').style.color = isTS ? "var(--ts)" : "var(--js)";
+    document.getElementById('role-card').className = "card " + (isTS ? "ts-team" : "js-team");
+    document.getElementById('point-num').innerText = idx + 1;
+    document.getElementById('point-title').innerText = topic.t;
+    document.getElementById('point-desc').innerText = "YOUR ARGUMENT: " + (isTS ? topic.ts : topic.js);
+}
 </script>
 </body>
 </html>
